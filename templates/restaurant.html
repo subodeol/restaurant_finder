@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<center><h1>{{restaurant.name}}</h1></center>
+<div style="height: 300px;">
+    
+    <div style="width: 50%;float: left;background-color:floralwhite;padding: 3%;">
+        <div style="height: 200px;">
+            <p>Description : ITS NOT ABOUT OWNING A RESTAURANT, ITS ABOUT BEING PART OF A LEGACY!!
+            {{restaurant.name}} has currently given out over 30 plus Franchises, and covers well-nigh a Lakh Sqft of retail space in all. All the {{restaurant.name}} outlets are doing well with a wide customer base and healthy revenues. Some of our franchisee and business partners have invested in more than one {{restaurant.name}} restaurant, purely based on their encouraging experience and immense faith in our brand. We welcome strategic alliances with any Governmental or Private, individual or institution with the similar vision, hunger for growth and a sound investment potential.</div>
+        </p>
+            <div style="height: 80px">
+            <h5>Rating : {{restaurant.rating}}</h5>
+            <h5>Number : +91-8891675611</h5>
+        </div>
+
+    </div>
+    <div style="width: 45%; float: right;">
+        <h2 id="fh2">Create a Review!</h2>
+
+
+        <form id="feedback" action="">
+            {% csrf_token %}
+
+            <div class="pinfo">Rate our overall services.</div>
+
+
+            <div class="form-group" style="margin-top: 4%;">
+                <div class="col-md-12 inputGroupContainer">
+                    <div class="input-group">
+                        <span class="input-group-addon"><i class="fa fa-heart"></i></span>
+                        <select class="form-control" name="rate" id="rate">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="pinfo" style="margin-top: 8%;">Write your feedback.</div>
+
+            <input type="text" hidden value={{restaurant.id}} name="restaurant">
+            <div class="form-group" style="margin-top: 4%;">
+                <div class="col-md-12 inputGroupContainer">
+                    <div class="input-group">
+                        <span class="input-group-addon"><i class="fa fa-pencil"></i></span>
+                        <textarea class="form-control" name="review" id="review" rows="3"></textarea>
+
+                    </div>
+                </div>
+            </div>
+
+            <button style="margin-top: 4%;" type="submit" class="btn btn-primary">Submit</button>
+
+
+        </form>
+    </div>
+
+</div>
+<div style="height: 300px;margin-top: 5%;">
+    <h4>Reviews : </h4>
+    {% for review in reviews %}
+    <div style="border: 1px dotted black;padding: 2%;background-color:ghostwhite;">
+        <div >
+            <p class="card-text">Given By : {{review.given_by.username}} </p>
+            <p class="card-text">Review : {{review.review}}</p>
+            <p class="card-text">Rating : {{review.rating}}</p>
+            <p class="card-text">Reviewed On :{{review.created_on}}</p>
+            <form class="comment_form" action="{% url 'post_comment' %}">
+                {% csrf_token %}
+                <div>
+                    <input hidden name="review" value={{review.id}}>
+                    <textarea name="comment" id="comment" placeholder="comment..."
+                        style="font-family:sans-serif;font-size:1.2em;width: 40%;">
+                        </textarea>
+                </div>
+                <input type="submit" value="Post Comment">
+            </form>
+            <h5>Comments:</h5>
+            {% for comment in review.comments_set.all %}
+            {% if comment.user == request.user %}
+            <div style="border: 1px dotted red;background-color: cornflowerblue;">
+                {% else %}
+                <div style="border: 1px dotted red;">
+                    {% endif %}
+              <h6><b>Comment By :</b> {{comment.user.username}}</h6>
+              <h6><b>Comment :</b> {{comment.comment}}</h6>
+            </div>
+            
+    
+            {% endfor %}
+        </div>
+        
+    </div>
+    
+
+    {% endfor %}
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+<script src="https://use.fontawesome.com/a6f0361695.js"></script>
+<script>
+
+    $("#feedback").submit(function (e) {
+        e.preventDefault();
+        var serializedData = $(this).serialize();
+        // make POST ajax call
+        $.ajax({
+            type: 'POST',
+            url: "{% url 'create_review' %}",
+            data: serializedData,
+            success: function (response) {
+                alert("Review added. Refresh the Page.")
+                $("#feedback").trigger('reset');
+
+            },
+            error: function (response) {
+                // alert the error if any error occured
+                alert(response["responseJSON"]["error"]);
+            }
+        })
+    })
+
+    $(".comment_form").submit(function (e) {
+        e.preventDefault();
+        var serializedData = $(this).serialize();
+        // make POST ajax call
+        $.ajax({
+            type: 'POST',
+            url: "{% url 'post_comment' %}",
+            data: serializedData,
+            success: function (response) {
+                alert("Comment added, Refresh The Page")
+
+                $("#comment_form").trigger('reset');
+
+            },
+            error: function (response) {
+                // alert the error if any error occured
+                alert(response["responseJSON"]["error"]);
+            }
+        })
+    })
+</script>
+
+
+
+{% endblock %}

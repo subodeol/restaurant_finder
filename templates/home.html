@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+  .outer>* {
+    display: inline-block;
+    vertical-align: middle;
+    background-color: lightgreen;
+
+  }
+
+  .outer {
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .one {
+    width: 250px;
+    height: 80%;
+    margin-top: 2%;
+  }
+
+  .fa {
+  font-size: 50px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.fa:hover {
+  color: darkblue;
+}
+</style>
+<script>
+
+function thumbsDown(x) {
+  $.ajax({
+      url: '/restaurant/thumbsdown/' + x.id,
+      dataType: 'json',
+      success: function (data) {
+        if (data.success) {
+          x.classList.toggle("fa-thumbs-down");
+
+        }
+      }
+    });
+}
+
+  function visit_restaurant(id) {
+    $.ajax({
+      url: '/restaurant/visited/' + id,
+
+      dataType: 'json',
+      success: function (data) {
+        if (data.success) {
+          alert("Okay, Please review this Restaurant.")
+          document.getElementById("reviewed_" + id).hidden = false;
+          document.getElementById("visited_" + id).hidden = true;
+        }
+      }
+    });
+
+  }
+</script>
+
+<div style="height: 50px;">
+  <h3>Your Favourite Restaurants :</h3>
+</div>
+{% if not user_restaurants %}
+  <h4 style="margin-left: 10%;">You haven't added any restaurant yet. <a href={% url 'restaurant_search' %}>Click here to search the restaurant.</a></h4>
+  {% else %}
+<div class="outer" style="height: 300px;">
+  
+  {% for restaurant in user_restaurants %}
+  <!-- <div class="one">Some text that will wrap</div> -->
+  <div>
+    <div class="card" style="height: 250px;padding: 25px;">
+      <div class="card-body">
+        {% csrf_token %}
+
+        <h5 class="card-subtitle mb-2 text-muted"><a href="#"> {{restaurant.restaurant.name}}</a></h>
+          <h6 class="card-subtitle mb-2 text-muted">Rating :{{restaurant.restaurant.rating}}</h6>
+
+          {% if not restaurant.visited %}
+          <input id="visited_{{restaurant.id}}" type="button" required="" name="id" maxlength="150" class="res_id"
+            onclick="visit_restaurant({{restaurant.id}})" value="Visited ?">
+          {% endif %}
+
+          {% if restaurant.visited %}
+          <a href="/restaurant/{{restaurant.restaurant.id}}">
+            <input id="reviewed_{{restaurant.id}}" type="button" required="" name="id" maxlength="150" class="res_id"
+              value="Add a review">
+          </a>
+
+          <div style="margin-top: 35px;">
+            {% if not restaurant.thumbs_down %}
+            <i id ="{{restaurant.id}}" onclick="thumbsDown(this)" class="fa fa-thumbs-up"></i>
+            {% else %}
+            <i id ="{{restaurant.id}}"  class="fa fa-thumbs-down"></i>
+            {% endif %}
+          </div>
+
+          {% else %}
+          <a href="/restaurant/{{restaurant.restaurant.id}}">
+
+            <input id="reviewed_{{restaurant.id}}" hidden type="button" required="" name="id" maxlength="150"
+              class="res_id" value="Add a review">
+          </a>
+          {% endif %}
+
+      </div>
+    </div>
+  </div>
+
+  {% endfor %}
+</div>
+{% endif %}
+
+<div style="height: 300px;">
+  <div style="height: 50px;">
+    <h3>Your Reviews :</h3>
+  </div>
+  {% if not user_reviews %}
+  <h4 style="margin-left: 10%;">No Review.</h4>
+
+  {% else %}
+  {% for review in user_reviews %}
+  <div style="border: 1px dotted black;padding: 2%;background-color:ghostwhite;">
+    <div >
+        <p class="card-text">Restaurant : {{review.restaurant.name}} </p>
+
+        <p class="card-text">Review : {{review.review}}</p>
+        <p class="card-text">Rating : {{review.rating}}</p>
+        <p class="card-text">Reviewed On :{{review.created_on}}</p>
+        
+        <h5>Comments:</h5>
+        {% for comment in review.comments_set.all %}
+        <div style="border: 1px dotted red;background-color:mintcream;">
+          <h6><b>Comment By :</b> {{comment.user.username}}</h6>
+          <h6><b>Comment :</b> {{comment.comment}}</h6>
+        </div>
+        
+
+        {% endfor %}
+    </div>
+    
+</div>
+
+  {% endfor %}
+  {% endif %}
+</div>
+
+{% endblock %}
